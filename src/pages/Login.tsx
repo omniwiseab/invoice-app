@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
 
+// Email validation regex
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,21 +14,40 @@ export const Login = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
+  const validateForm = (): boolean => {
+    if (!email || !password) {
+      setError('Email and password are required');
+      return false;
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { error } = await signIn(email, password);
 
       if (error) {
-        setError('Felaktig e-post eller lösenord');
+        setError('Invalid email or password');
       } else {
         navigate('/');
       }
     } catch (err) {
-      setError('Ett oväntat fel inträffade. Försök igen.');
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -36,8 +58,8 @@ export const Login = () => {
       <div className="auth-card">
         <div className="auth-header">
           <LogIn size={40} color="var(--primary-color)" />
-          <h1>Logga in</h1>
-          <p>Logga in på ditt fakturakonto</p>
+          <h1>Sign In</h1>
+          <p>Sign in to your invoice account</p>
         </div>
 
         {error && (
@@ -51,14 +73,14 @@ export const Login = () => {
           <div className="form-group">
             <label htmlFor="email">
               <Mail size={16} />
-              E-post
+              Email
             </label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="din@email.com"
+              placeholder="your@email.com"
               required
               autoComplete="email"
             />
@@ -67,7 +89,7 @@ export const Login = () => {
           <div className="form-group">
             <label htmlFor="password">
               <Lock size={16} />
-              Lösenord
+              Password
             </label>
             <input
               type="password"
@@ -82,20 +104,20 @@ export const Login = () => {
 
           <div className="auth-links">
             <Link to="/forgot-password" className="link">
-              Glömt lösenord?
+              Forgot password?
             </Link>
           </div>
 
           <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
-            {loading ? 'Loggar in...' : 'Logga in'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         <div className="auth-footer">
           <p>
-            Har du inget konto?{' '}
+            Don't have an account?{' '}
             <Link to="/register" className="link">
-              Registrera dig
+              Sign up
             </Link>
           </p>
         </div>

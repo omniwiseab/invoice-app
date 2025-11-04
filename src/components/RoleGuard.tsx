@@ -26,7 +26,7 @@ export const RoleGuard = ({
         gap: '20px'
       }}>
         <div className="spinner"></div>
-        <p style={{ color: 'var(--gray-600)' }}>Kontrollerar behörighet...</p>
+        <p style={{ color: 'var(--gray-600)' }}>Checking permissions...</p>
       </div>
     );
   }

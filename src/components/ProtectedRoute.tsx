@@ -19,7 +19,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         gap: '20px'
       }}>
         <div className="spinner"></div>
-        <p style={{ color: 'var(--gray-600)' }}>Laddar...</p>
+        <p style={{ color: 'var(--gray-600)' }}>Loading...</p>
       </div>
     );
   }

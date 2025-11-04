@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import type { Customer, Invoice, CompanyInfo, PaymentRecord } from '../types';
+import type { Customer, Invoice, CompanyInfo } from '../types';
 
 export class SupabaseService {
   // Customers

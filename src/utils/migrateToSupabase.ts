@@ -86,7 +86,7 @@ export const migrateLocalStorageToSupabase = async (userId: string): Promise<{ s
       const newInvoice = await supabaseService.createInvoice(userId, {
         ...invoiceData,
         customerId: newCustomerId,
-      });
+      } as any); // Type assertion needed since we're excluding the 'customer' object
 
       if (newInvoice) {
         invoicesCreated++;

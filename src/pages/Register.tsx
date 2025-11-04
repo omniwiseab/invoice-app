@@ -3,6 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { UserPlus, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 
+// Email validation regex
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Password must be at least 8 characters and contain uppercase, lowercase, and number
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
 export const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,19 +19,41 @@ export const Register = () => {
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
+  const validateForm = (): boolean => {
+    if (!email || !password || !confirmPassword) {
+      setError('All fields are required');
+      return false;
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return false;
+    }
+
+    if (!PASSWORD_REGEX.test(password)) {
+      setError('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(false);
 
-    // Validering
-    if (password !== confirmPassword) {
-      setError('Lösenorden matchar inte');
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('Lösenordet måste vara minst 6 tecken');
+    if (!validateForm()) {
       return;
     }
 
@@ -36,19 +64,19 @@ export const Register = () => {
 
       if (error) {
         if (error.message.includes('already registered')) {
-          setError('E-postadressen är redan registrerad');
+          setError('Email address is already registered');
         } else {
-          setError(error.message || 'Ett fel inträffade vid registrering');
+          setError(error.message || 'An error occurred during registration');
         }
       } else {
         setSuccess(true);
-        // Vänta 2 sekunder innan vi navigerar till login
+        // Wait 2 seconds before navigating to login
         setTimeout(() => {
           navigate('/login');
         }, 2000);
       }
     } catch (err) {
-      setError('Ett oväntat fel inträffade. Försök igen.');
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -59,8 +87,8 @@ export const Register = () => {
       <div className="auth-card">
         <div className="auth-header">
           <UserPlus size={40} color="var(--primary-color)" />
-          <h1>Skapa konto</h1>
-          <p>Registrera dig för att komma igång</p>
+          <h1>Create Account</h1>
+          <p>Register to get started</p>
         </div>
 
         {error && (
@@ -73,7 +101,7 @@ export const Register = () => {
         {success && (
           <div className="alert alert-success">
             <CheckCircle size={20} />
-            <span>Kontot har skapats! Kontrollera din e-post för att verifiera ditt konto.</span>
+            <span>Account created! Check your email to verify your account.</span>
           </div>
         )}
 
@@ -81,14 +109,14 @@ export const Register = () => {
           <div className="form-group">
             <label htmlFor="email">
               <Mail size={16} />
-              E-post
+              Email
             </label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="din@email.com"
+              placeholder="your@email.com"
               required
               autoComplete="email"
             />
@@ -97,7 +125,7 @@ export const Register = () => {
           <div className="form-group">
             <label htmlFor="password">
               <Lock size={16} />
-              Lösenord
+              Password
             </label>
             <input
               type="password"
@@ -106,16 +134,16 @@ export const Register = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              minLength={6}
+              minLength={8}
               autoComplete="new-password"
             />
-            <small className="form-hint">Minst 6 tecken</small>
+            <small className="form-hint">At least 8 characters with uppercase, lowercase, and number</small>
           </div>
 
           <div className="form-group">
             <label htmlFor="confirmPassword">
               <Lock size={16} />
-              Bekräfta lösenord
+              Confirm Password
             </label>
             <input
               type="password"
@@ -124,21 +152,21 @@ export const Register = () => {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               required
-              minLength={6}
+              minLength={8}
               autoComplete="new-password"
             />
           </div>
 
           <button type="submit" className="btn btn-primary btn-full" disabled={loading || success}>
-            {loading ? 'Skapar konto...' : 'Skapa konto'}
+            {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
 
         <div className="auth-footer">
           <p>
-            Har du redan ett konto?{' '}
+            Already have an account?{' '}
             <Link to="/login" className="link">
-              Logga in
+              Sign in
             </Link>
           </p>
         </div>

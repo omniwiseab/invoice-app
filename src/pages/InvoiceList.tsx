@@ -4,7 +4,7 @@ import { useStore } from '../store/useStore';
 import { formatCurrency, getInvoiceStatus } from '../utils/invoiceCalculations';
 import { Plus, Download, Eye, Trash2, Mail } from 'lucide-react';
 import { downloadInvoicePDF } from '../services/pdfService';
-import { generateInvoiceWord } from '../services/wordService';
+// import { generateInvoiceWord } from '../services/wordService'; // Not currently used
 import { format } from 'date-fns';
 
 export const InvoiceList = () => {
@@ -30,13 +30,14 @@ export const InvoiceList = () => {
     downloadInvoicePDF(invoice, companyInfo);
   };
 
-  const handleDownloadWord = async (invoice: any) => {
-    if (!companyInfo) {
-      alert('Vänligen konfigurera företagsinformation först i Inställningar');
-      return;
-    }
-    await generateInvoiceWord(invoice, companyInfo);
-  };
+  // Word download functionality - currently not used in UI
+  // const handleDownloadWord = async (invoice: any) => {
+  //   if (!companyInfo) {
+  //     alert('Please configure company information first in Settings');
+  //     return;
+  //   }
+  //   await generateInvoiceWord(invoice, companyInfo);
+  // };
 
   const handleSendEmail = async (invoice: any) => {
     if (!companyInfo) {

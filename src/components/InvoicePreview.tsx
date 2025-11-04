@@ -104,7 +104,7 @@ export const InvoicePreview = ({ invoice, companyInfo }: InvoicePreviewProps) =>
           </tr>
         </thead>
         <tbody>
-          {invoice.items.map((item, idx) => (
+          {invoice.items.map((item) => (
             <tr key={item.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
               <td style={{ padding: '12px 8px', fontSize: '13px' }}>{item.description}</td>
               <td style={{ padding: '12px 8px', textAlign: 'right', fontSize: '13px' }}>{item.quantity}</td>

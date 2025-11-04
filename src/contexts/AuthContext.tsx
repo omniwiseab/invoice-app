@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Funktion för att hämta användarprofil från databasen
+  // Function to fetch user profile from database
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     if (!supabase) return null;
 
@@ -52,14 +52,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Kontrollera om Supabase är konfigurerat
+    // Check if Supabase is configured
     if (!supabase) {
       console.warn('Supabase is not configured. Auth will not work.');
       setLoading(false);
       return;
     }
 
-    // Hämta nuvarande session
+    // Get current session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    // Lyssna på auth-ändringar
+    // Listen to auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
-      return { error: new Error('Supabase not configured') as AuthError };
+      return { error: { message: 'Supabase not configured', name: 'ConfigError', status: 500 } as AuthError };
     }
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     if (!supabase) {
-      return { error: new Error('Supabase not configured') as AuthError };
+      return { error: { message: 'Supabase not configured', name: 'ConfigError', status: 500 } as AuthError };
     }
 
     const { error } = await supabase.auth.signUp({
@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (email: string) => {
     if (!supabase) {
-      return { error: new Error('Supabase not configured') as AuthError };
+      return { error: { message: 'Supabase not configured', name: 'ConfigError', status: 500 } as AuthError };
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {

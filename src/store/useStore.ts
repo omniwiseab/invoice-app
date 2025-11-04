@@ -52,16 +52,12 @@ interface AppState {
   addPayment: (payment: PaymentRecord) => void;
 }
 
-// Helper function to get current user ID
-const getCurrentUserId = (): string => {
-  // For now, use a temporary user ID until we implement full authentication
-  // This will be replaced with actual Supabase auth user ID
-  const tempUserId = localStorage.getItem('temp_user_id');
-  if (tempUserId) return tempUserId;
+// Helper function to get current user ID from Supabase auth
+const getCurrentUserId = async (): Promise<string | null> => {
+  if (!supabase) return null;
 
-  const newUserId = crypto.randomUUID();
-  localStorage.setItem('temp_user_id', newUserId);
-  return newUserId;
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id || null;
 };
 
 export const useStore = create<AppState>()(
@@ -79,7 +75,11 @@ export const useStore = create<AppState>()(
       companyInfo: null,
       setCompanyInfo: async (info) => {
         if (isSupabaseConfigured()) {
-          const userId = get().userId || getCurrentUserId();
+          const userId = get().userId || await getCurrentUserId();
+          if (!userId) {
+            console.error('No authenticated user found');
+            return;
+          }
           const success = await supabaseService.saveCompanyInfo(userId, info);
           if (success) {
             set({ companyInfo: info });
@@ -91,7 +91,11 @@ export const useStore = create<AppState>()(
       loadCompanyInfo: async () => {
         if (isSupabaseConfigured()) {
           set({ isLoading: true });
-          const userId = get().userId || getCurrentUserId();
+          const userId = get().userId || await getCurrentUserId();
+          if (!userId) {
+            set({ isLoading: false });
+            return;
+          }
           const info = await supabaseService.getCompanyInfo(userId);
           set({ companyInfo: info, isLoading: false });
         }
@@ -102,14 +106,22 @@ export const useStore = create<AppState>()(
       loadCustomers: async () => {
         if (isSupabaseConfigured()) {
           set({ isLoading: true });
-          const userId = get().userId || getCurrentUserId();
+          const userId = get().userId || await getCurrentUserId();
+          if (!userId) {
+            set({ isLoading: false });
+            return;
+          }
           const customers = await supabaseService.getCustomers(userId);
           set({ customers, isLoading: false });
         }
       },
       addCustomer: async (customer) => {
         if (isSupabaseConfigured()) {
-          const userId = get().userId || getCurrentUserId();
+          const userId = get().userId || await getCurrentUserId();
+          if (!userId) {
+            console.error('No authenticated user found');
+            return;
+          }
           const newCustomer = await supabaseService.createCustomer(userId, customer);
           if (newCustomer) {
             set((state) => ({
@@ -168,15 +180,23 @@ export const useStore = create<AppState>()(
       loadInvoices: async () => {
         if (isSupabaseConfigured()) {
           set({ isLoading: true });
-          const userId = get().userId || getCurrentUserId();
+          const userId = get().userId || await getCurrentUserId();
+          if (!userId) {
+            set({ isLoading: false });
+            return;
+          }
           const invoices = await supabaseService.getInvoices(userId);
           set({ invoices, isLoading: false });
         }
       },
       addInvoice: async (invoice) => {
         if (isSupabaseConfigured()) {
-          const userId = get().userId || getCurrentUserId();
-          const newInvoice = await supabaseService.createInvoice(userId, invoice as any);
+          const userId = get().userId || await getCurrentUserId();
+          if (!userId) {
+            console.error('No authenticated user found');
+            return;
+          }
+          const newInvoice = await supabaseService.createInvoice(userId, invoice);
           if (newInvoice) {
             set((state) => ({
               invoices: [...state.invoices, newInvoice],
@@ -256,7 +276,8 @@ export const useStore = create<AppState>()(
     {
       name: 'invoice-app-storage',
       storage: createJSONStorage(() => localStorage),
-      // Spara allt som backup även om vi använder Supabase
+      // Save everything as backup/cache even when using Supabase for offline support
+      // Note: Supabase data takes precedence when loaded
     }
   )
 );
