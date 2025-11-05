@@ -5,6 +5,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleGuard } from './components/RoleGuard';
 import { AuthHashHandler } from './components/AuthHashHandler';
+import { AuthCallbackHandler } from './components/AuthCallbackHandler';
 import { useStore } from './store/useStore';
 import { isSupabaseConfigured } from './services/supabaseService';
 
@@ -70,13 +71,14 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <AuthHashHandler />
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
+          <AuthCallbackHandler>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Protected routes */}
               <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
@@ -106,6 +108,7 @@ function App() {
               </Route>
             </Routes>
           </Suspense>
+          </AuthCallbackHandler>
         </BrowserRouter>
       </AuthProvider>
     </ErrorBoundary>
