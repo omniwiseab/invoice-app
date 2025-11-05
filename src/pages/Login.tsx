@@ -51,9 +51,11 @@ export const Login = () => {
     setLoading(true);
 
     try {
+      console.log('Attempting login for:', email);
       const { error } = await signIn(email, password);
 
       if (error) {
+        console.error('Login error:', error);
         // Log authentication error
         logAuthError('login', error.message || 'Login failed', email);
 
@@ -66,14 +68,18 @@ export const Login = () => {
             : '';
           setError(`Too many failed attempts. Account temporarily locked for ${timeRemaining}.`);
         } else {
-          setError(`Invalid email or password. ${result.remaining} attempts remaining.`);
+          // Show detailed error message for debugging
+          const errorMsg = error.message || 'Invalid email or password';
+          setError(`Login failed: ${errorMsg}. ${result.remaining} attempts remaining.`);
         }
       } else {
+        console.log('Login successful!');
         // Reset rate limit on successful login
         authRateLimiter.reset(email, 'login');
         navigate('/');
       }
     } catch (err) {
+      console.error('Unexpected login error:', err);
       // Log unexpected error
       logAuthError('login', err instanceof Error ? err : 'Unknown error', email);
       setError('An unexpected error occurred. Please try again.');
