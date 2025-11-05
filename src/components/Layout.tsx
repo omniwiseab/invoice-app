@@ -8,7 +8,9 @@ import {
   DollarSign,
   LogOut,
   User,
-  Shield
+  Shield,
+  ClipboardList,
+  Package
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -31,23 +33,31 @@ export const Layout = () => {
         <nav className="sidebar-nav">
           <NavLink to="/" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <Home size={20} />
-            <span>Översikt</span>
+            <span>Dashboard</span>
           </NavLink>
           <NavLink to="/invoices" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <FileText size={20} />
-            <span>Fakturor</span>
+            <span>Invoices</span>
+          </NavLink>
+          <NavLink to="/quotes" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+            <ClipboardList size={20} />
+            <span>Quotes</span>
+          </NavLink>
+          <NavLink to="/quote-templates" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+            <Package size={20} />
+            <span>Quote Templates</span>
           </NavLink>
           <NavLink to="/customers" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <Users size={20} />
-            <span>Kunder</span>
+            <span>Customers</span>
           </NavLink>
           <NavLink to="/statistics" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <BarChart3 size={20} />
-            <span>Statistik</span>
+            <span>Statistics</span>
           </NavLink>
           <NavLink to="/settings" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <Settings size={20} />
-            <span>Inställningar</span>
+            <span>Settings</span>
           </NavLink>
 
           {/* Admin link - only visible for superadmins */}
@@ -70,7 +80,7 @@ export const Layout = () => {
           </div>
           <button onClick={handleLogout} className="logout-btn">
             <LogOut size={16} />
-            <span>Logga ut</span>
+            <span>Logout</span>
           </button>
         </div>
       </aside>

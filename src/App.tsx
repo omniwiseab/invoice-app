@@ -18,6 +18,10 @@ const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m
 const InvoiceList = lazy(() => import('./pages/InvoiceList').then(m => ({ default: m.InvoiceList })));
 const InvoiceForm = lazy(() => import('./pages/InvoiceForm').then(m => ({ default: m.InvoiceForm })));
 const InvoiceView = lazy(() => import('./pages/InvoiceView').then(m => ({ default: m.InvoiceView })));
+const QuoteList = lazy(() => import('./pages/QuoteList').then(m => ({ default: m.QuoteList })));
+const QuoteForm = lazy(() => import('./pages/QuoteForm').then(m => ({ default: m.QuoteForm })));
+const QuoteView = lazy(() => import('./pages/QuoteView').then(m => ({ default: m.QuoteView })));
+const QuoteItemTemplatesManager = lazy(() => import('./pages/QuoteItemTemplatesManager').then(m => ({ default: m.QuoteItemTemplatesManager })));
 const Customers = lazy(() => import('./pages/Customers').then(m => ({ default: m.Customers })));
 const Statistics = lazy(() => import('./pages/Statistics').then(m => ({ default: m.Statistics })));
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
@@ -77,6 +81,11 @@ function App() {
                 <Route path="invoices/new" element={<InvoiceForm />} />
                 <Route path="invoices/:id" element={<InvoiceView />} />
                 <Route path="invoices/:id/edit" element={<InvoiceForm />} />
+                <Route path="quotes" element={<QuoteList />} />
+                <Route path="quotes/new" element={<QuoteForm />} />
+                <Route path="quotes/:id" element={<QuoteView />} />
+                <Route path="quotes/:id/edit" element={<QuoteForm />} />
+                <Route path="quote-templates" element={<QuoteItemTemplatesManager />} />
                 <Route path="customers" element={<Customers />} />
                 <Route path="statistics" element={<Statistics />} />
                 <Route path="settings" element={<Settings />} />
