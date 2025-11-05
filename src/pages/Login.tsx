@@ -56,8 +56,24 @@ export const Login = () => {
 
       if (error) {
         console.error('Login error:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+
         // Log authentication error
         logAuthError('login', error.message || 'Login failed', email);
+
+        // Check for specific error types
+        let errorMsg = error.message || 'Invalid email or password';
+
+        // Email not confirmed error
+        if (errorMsg.includes('Email not confirmed') || errorMsg.includes('email_not_confirmed')) {
+          setError('Please verify your email address before logging in. Check your inbox for the confirmation email.');
+          return;
+        }
+
+        // Invalid credentials error
+        if (errorMsg.includes('Invalid login credentials') || errorMsg.includes('invalid_grant')) {
+          errorMsg = 'Invalid email or password. Please check your credentials.';
+        }
 
         // Record failed attempt
         const result = authRateLimiter.recordAttempt(email, 'login');
@@ -68,9 +84,7 @@ export const Login = () => {
             : '';
           setError(`Too many failed attempts. Account temporarily locked for ${timeRemaining}.`);
         } else {
-          // Show detailed error message for debugging
-          const errorMsg = error.message || 'Invalid email or password';
-          setError(`Login failed: ${errorMsg}. ${result.remaining} attempts remaining.`);
+          setError(`${errorMsg} (${result.remaining} attempts remaining)`);
         }
       } else {
         console.log('Login successful!');

@@ -123,7 +123,13 @@ export const Register = () => {
         {success && (
           <div className="alert alert-success">
             <CheckCircle size={20} />
-            <span>Account created! Check your email to verify your account.</span>
+            <div>
+              <strong>Account created successfully!</strong>
+              <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>
+                Please check your email inbox for a confirmation link. You must verify your email before you can log in.
+                If you don't see the email, check your spam folder.
+              </p>
+            </div>
           </div>
         )}
 
