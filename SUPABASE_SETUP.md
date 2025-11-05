@@ -1,121 +1,175 @@
-# Supabase Setup Guide
+# Supabase Setup Guide / Installationsguide
 
-## Steg 1: Skapa Supabase-projekt
+Denna guide hjälper dig att sätta upp Supabase för din fakturaapplikation.
 
-1. Gå till [supabase.com](https://supabase.com)
-2. Logga in eller skapa konto
-3. Klicka på "New Project"
+## Steg 1: Skapa ett Supabase-projekt
+
+1. Gå till [Supabase Dashboard](https://supabase.com/dashboard)
+2. Logga in eller skapa ett gratis konto
+3. Klicka på **"New Project"**
 4. Fyll i:
-   - Project name: `invoice-app` (eller valfritt namn)
-   - Database Password: Välj ett starkt lösenord
-   - Region: Välj närmaste region (t.ex. `eu-north-1` för Stockholm)
-5. Klicka på "Create new project"
-6. Vänta några minuter medan projektet skapas
+   - **Name**: invoice-app (eller valfritt namn)
+   - **Database Password**: Skapa ett starkt lösenord (spara det på säker plats!)
+   - **Region**: Välj regionen närmast dig (t.ex. `eu-north-1` för Stockholm)
+   - **Pricing Plan**: Free tier fungerar bra för utveckling
+5. Klicka på **"Create new project"**
+6. Vänta 2-3 minuter medan projektet skapas
 
-## Steg 2: Konfigurera databasen
+## Steg 2: Hämta dina API-nycklar
 
-1. Gå till SQL Editor i Supabase Dashboard (vänster meny)
-2. Klicka på "+ New query"
-3. Kopiera hela innehållet från filen `supabase-schema.sql`
-4. Klistra in i SQL-editorn
-5. Klicka på "Run" (eller tryck Ctrl/Cmd + Enter)
-6. Verifiera att alla tabeller skapades utan fel
+1. I ditt Supabase-projekt, gå till: **Settings → API** (kugghjulsikonen i vänster menyn)
+2. Du kommer att se:
+   - **Project URL** - något liknande `https://xyzabc123.supabase.co`
+   - **API Keys** sektion med:
+     - `anon` `public` key - en lång sträng som börjar med `eyJ...`
 
-## Steg 3: Hämta API-nycklar
+3. Kopiera dessa två värden
 
-1. Gå till "Project Settings" (kugghjulsikon i vänster meny)
-2. Klicka på "API" i sidomenyn
-3. Hitta följande två värden:
-   - **Project URL** (under "Project URL")
-   - **anon public** key (under "Project API keys")
-4. Kopiera dessa värden
+## Steg 3: Konfigurera din .env.local fil
 
-## Steg 4: Konfigurera applikationen
-
-1. Öppna filen `.env` i projektets rot
-2. Ersätt värdena med dina egna:
+1. Öppna `.env.local` filen i projektets root
+2. Ersätt placeholder-värdena:
 
 ```env
-VITE_SUPABASE_URL=https://ditt-projekt-id.supabase.co
-VITE_SUPABASE_ANON_KEY=din_anon_public_key_här
+# Före (placeholder-värden):
+VITE_SUPABASE_URL=your_supabase_project_url_here
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# Efter (dina riktiga värden):
+VITE_SUPABASE_URL=https://xyzabc123.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ...
 ```
 
 3. Spara filen
-4. Starta om utvecklingsservern:
+
+**⚠️ VIKTIGT:** Committa ALDRIG `.env.local` till git! Den finns redan i `.gitignore`.
+
+## Steg 4: Sätt upp databasschemat
+
+1. Gå till din Supabase Dashboard
+2. Klicka på **SQL Editor** (i vänster menyn)
+3. Öppna filen `supabase-schema-auth-fixed.sql` från ditt projekt
+4. Kopiera ALL SQL-kod från den filen
+5. Klistra in den i Supabase SQL Editor
+6. Klicka på **"Run"** (eller tryck Ctrl+Enter)
+7. Du bör se "Success. No rows returned"
+
+Detta skapar:
+- `users` tabell för användarprofiler
+- `companies` tabell för företagsinformation
+- `customers` tabell för kunddata
+- `invoices` och `invoice_items` tabeller
+- Triggers för att automatiskt skapa användarprofiler vid registrering
+- Row Level Security (RLS) policies
+
+## Steg 5: Konfigurera autentiseringsinställningar
+
+### För Utveckling (Rekommenderat för testning):
+
+1. Gå till: **Authentication → Providers → Email**
+2. **Avmarkera** "Confirm email" checkboxen
+3. Klicka på **Save**
+
+Detta låter dig registrera dig och logga in direkt utan email-verifiering.
+
+### För Produktion (Mer säkert):
+
+Behåll "Confirm email" ikryssad och konfigurera email:
+
+1. Gå till: **Authentication → Providers → Email**
+2. Håll "Confirm email" **ikryssad**
+3. Gå till: **Project Settings → Authentication → SMTP Settings**
+4. Konfigurera din SMTP-server (eller använd Supabase standard)
+5. Anpassa email-mallar i: **Authentication → Email Templates**
+
+## Steg 6: Konfigurera Site URL
+
+1. Gå till: **Authentication → URL Configuration**
+2. Lägg till dina site URLs:
+   - **Site URL**: `http://localhost:5173`
+   - **Redirect URLs**: Lägg till dessa:
+     - `http://localhost:5173/**`
+     - `http://localhost:5173/reset-password`
+
+3. Klicka på **Save**
+
+## Steg 7: Starta om utvecklingsservern
+
+Efter dessa ändringar:
+
 ```bash
+# Stoppa dev-servern (Ctrl+C i terminalen)
+# Starta sedan igen:
 npm run dev
 ```
 
-## Steg 5: Aktivera autentisering (valfritt men rekommenderat)
+Appen kommer nu att laddas om med din Supabase-konfiguration!
 
-För att lägga till användarautentisering:
+## Steg 8: Testa din setup
 
-1. Gå till "Authentication" i Supabase Dashboard
-2. Klicka på "Providers"
-3. Aktivera Email (redan aktiverad som standard)
-4. Konfigurera eventuella andra providers (Google, GitHub, etc.)
+1. Gå till `http://localhost:5173/register`
+2. Skapa ett nytt konto med:
+   - Email: din-email@example.com
+   - Password: Måste vara 8+ tecken med stora bokstäver, små bokstäver och siffra
+   - Exempel: `Password123`
 
-## Steg 6: Konfigurera Storage för logotyper (valfritt)
+3. Om email-bekräftelse är avaktiverad:
+   - Du bör se "Account created successfully!"
+   - Navigera till login och logga in direkt
 
-Om du vill lagra logotyper i Supabase istället för base64:
+4. Om email-bekräftelse är aktiverad:
+   - Kolla din email för bekräftelselänk
+   - Klicka på länken för att bekräfta
+   - Gå sedan till login-sidan
 
-1. Gå till "Storage" i Supabase Dashboard
-2. Klicka på "Create bucket"
-3. Namn: `logos`
-4. Public bucket: ☑️ (aktivera)
-5. Klicka på "Create bucket"
-
-## Funktioner som nu fungerar med Supabase
-
-✅ **Persistent datalagring**
-- All data sparas säkert i Supabase PostgreSQL-databas
-- Ingen risk att förlora data vid siduppdatering
-
-✅ **Multi-användare**
-- Varje användare har sin egen data
-- Row Level Security (RLS) skyddar mot obehörig åtkomst
-
-✅ **Realtidsuppdateringar (framtida funktion)**
-- Supabase stödjer realtidsuppdateringar
-- Kan enkelt aktiveras senare
-
-✅ **Backup och export**
-- Supabase tar automatiska backuper
-- Kan exportera data när som helst
-
-✅ **Skalbar**
-- Hanterar tusentals fakturor utan problem
-- Automatisk skalning
+5. Efter inloggning bör du omdirigeras till dashboarden!
 
 ## Felsökning
 
-### Problem: "Failed to fetch"
-- Kontrollera att URL och API-nyckel är korrekta i `.env`
-- Starta om utvecklingsservern efter att du ändrat `.env`
+### "Supabase is not configured" Error
+- Se till att du uppdaterade `.env.local` med riktiga värden (inte placeholders)
+- Se till att du startade om dev-servern efter att ha ändrat `.env.local`
+- Kontrollera att filen heter exakt `.env.local` (inte `.env` eller `env.local`)
 
-### Problem: "Invalid API key"
-- Se till att du kopierade rätt nyckel (anon public, inte service_role)
-- Kontrollera att det inte finns extra mellanslag
+### "Email not confirmed" Error
+- Antingen avaktivera email-bekräftelse (se Steg 5)
+- Eller kolla din email och klicka på bekräftelselänken
 
-### Problem: "Permission denied"
-- Verifiera att SQL-schemat kördes korrekt
-- Kontrollera RLS-policies i Supabase Dashboard
+### Kan inte se tabeller i Supabase Dashboard
+- Se till att du körde SQL-schemat (Steg 4)
+- Gå till: **Database → Tables** för att verifiera att tabellerna skapades
+- Leta efter: `users`, `companies`, `customers`, `invoices`, `invoice_items`
 
-### Problem: Data syns inte
-- Kontrollera att du är inloggad (om autentisering är aktiverad)
-- Kolla i Supabase Table Editor om data finns där
+### Database Password förlorat
+- Detta är lösenordet du satte när du skapade projektet
+- Du kan återställa det i: **Project Settings → Database → Reset database password**
+- OBS: Detta är inte samma som ditt Supabase-kontolösenord!
 
-## Nästa steg
+### Har fortfarande problem?
 
-När Supabase är konfigurerat kan du:
+Kolla dessa filer för mer hjälp:
+- `LOGIN_TROUBLESHOOTING.md` - Login-specifika problem
+- `README.md` - Allmän projektsetup
 
-1. **Lägga till autentisering** - Se `AUTH_SETUP.md` (kommer snart)
-2. **Implementera email-sending** - Använd Supabase Edge Functions
-3. **Lägga till filuppladdning** - För att spara PDF:er i Storage
-4. **Aktivera realtidsuppdateringar** - För live-synkning
+Eller kolla Supabase-dokumentationen:
+- [Supabase Auth Guide](https://supabase.com/docs/guides/auth)
+- [Row Level Security](https://supabase.com/docs/guides/auth/row-level-security)
 
-## Support
+## Säkerhetsnoteringar
 
-- Supabase Docs: https://supabase.com/docs
-- Supabase Discord: https://discord.supabase.com
-- GitHub Issues: https://github.com/supabase/supabase/issues
+- **Committa ALDRIG** `.env.local` till version control
+- **Dela ALDRIG** din `anon` key publikt (även om den är relativt säker)
+- **Dela ALDRIG** din `service_role` key - denna har admin-åtkomst!
+- För produktion, använd environment variables på din hosting-plattform
+- Aktivera Row Level Security (RLS) på alla tabeller (redan gjort i schemat)
+
+## Vad händer nu?
+
+Efter setup kan du:
+1. Skapa kunder
+2. Generera fakturor
+3. Hantera företagsinformation
+4. Exportera fakturor som PDF
+5. Spåra fakturastatus
+
+Njut av din fakturaapp! 🎉
