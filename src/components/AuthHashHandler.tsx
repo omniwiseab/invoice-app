@@ -5,21 +5,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
  * Component to handle Supabase auth hash tokens from email links.
  * Supabase sends tokens in URL hash (#access_token=...) which can cause
  * React Router to not match routes properly.
- *
- * Also handles HTTP → HTTPS redirect for development.
  */
 export const AuthHashHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Redirect HTTP to HTTPS in development
-    if (window.location.protocol === 'http:' && window.location.hostname === 'localhost') {
-      const httpsUrl = window.location.href.replace('http://', 'https://');
-      window.location.replace(httpsUrl);
-      return;
-    }
-
     // Check if URL has Supabase auth hash tokens
     const hash = window.location.hash;
 
