@@ -192,8 +192,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) return;
 
     console.log('Signing out...');
-    await supabase.auth.signOut();
-    setUserProfile(null);
+
+    try {
+      await supabase.auth.signOut();
+
+      // Explicitly clear all auth state
+      setSession(null);
+      setUser(null);
+      setUserProfile(null);
+
+      console.log('Sign out successful!');
+    } catch (err) {
+      console.error('Sign out error:', err);
+
+      // Clear state anyway even if signOut fails
+      setSession(null);
+      setUser(null);
+      setUserProfile(null);
+    }
   };
 
   const resetPassword = async (email: string) => {
