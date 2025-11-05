@@ -16,16 +16,21 @@ export const ForgotPassword = () => {
     setSuccess(false);
     setLoading(true);
 
+    console.log('Requesting password reset for:', email);
+
     try {
       const { error } = await resetPassword(email);
 
       if (error) {
-        setError('Ett fel inträffade. Kontrollera din e-postadress.');
+        console.error('Password reset error:', error);
+        setError(`Error: ${error.message || 'Could not send reset email. Check your email address.'}`);
       } else {
+        console.log('Password reset email sent successfully');
         setSuccess(true);
       }
     } catch (err) {
-      setError('Ett oväntat fel inträffade. Försök igen.');
+      console.error('Unexpected error during password reset:', err);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -36,8 +41,8 @@ export const ForgotPassword = () => {
       <div className="auth-card">
         <div className="auth-header">
           <KeyRound size={40} color="var(--primary-color)" />
-          <h1>Återställ lösenord</h1>
-          <p>Ange din e-postadress så skickar vi instruktioner</p>
+          <h1>Reset Password</h1>
+          <p>Enter your email address and we'll send you reset instructions</p>
         </div>
 
         {error && (
@@ -51,8 +56,8 @@ export const ForgotPassword = () => {
           <div className="alert alert-success">
             <CheckCircle size={20} />
             <span>
-              Vi har skickat instruktioner för återställning av lösenord till {email}.
-              Kontrollera din inkorg!
+              Password reset instructions have been sent to {email}.
+              Check your inbox (and spam folder)!
             </span>
           </div>
         )}
@@ -62,21 +67,21 @@ export const ForgotPassword = () => {
             <div className="form-group">
               <label htmlFor="email">
                 <Mail size={16} />
-                E-post
+                Email
               </label>
               <input
                 type="email"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="din@email.com"
+                placeholder="your@email.com"
                 required
                 autoComplete="email"
               />
             </div>
 
             <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
-              {loading ? 'Skickar...' : 'Skicka återställningslänk'}
+              {loading ? 'Sending...' : 'Send Reset Link'}
             </button>
           </form>
         )}
@@ -84,7 +89,7 @@ export const ForgotPassword = () => {
         <div className="auth-footer">
           <Link to="/login" className="link">
             <ArrowLeft size={16} />
-            Tillbaka till inloggning
+            Back to Login
           </Link>
         </div>
       </div>
