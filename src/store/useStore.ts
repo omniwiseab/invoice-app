@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Customer, Invoice, CompanyInfo, InvoiceTemplate, EmailConfig, LunarBankConfig, PaymentRecord } from '../types';
+import type { Customer, Invoice, CompanyInfo, InvoiceTemplate, EmailConfig, LunarBankConfig, PaymentRecord, Quote, QuoteItemTemplate } from '../types';
 import { supabaseService, isSupabaseConfigured } from '../services/supabaseService';
+import { quoteService } from '../services/quoteService';
 import { supabase } from '../lib/supabase';
 
 interface AppState {
@@ -50,6 +51,21 @@ interface AppState {
   // Payments
   payments: PaymentRecord[];
   addPayment: (payment: PaymentRecord) => void;
+
+  // Quotes
+  quotes: Quote[];
+  loadQuotes: () => Promise<void>;
+  addQuote: (quote: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateQuote: (id: string, quote: Partial<Quote>) => Promise<void>;
+  deleteQuote: (id: string) => Promise<void>;
+  getQuoteById: (id: string) => Quote | undefined;
+
+  // Quote Item Templates
+  quoteItemTemplates: QuoteItemTemplate[];
+  loadQuoteItemTemplates: () => Promise<void>;
+  addQuoteItemTemplate: (template: Omit<QuoteItemTemplate, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateQuoteItemTemplate: (id: string, template: Partial<QuoteItemTemplate>) => Promise<void>;
+  deleteQuoteItemTemplate: (id: string) => Promise<void>;
 }
 
 // Helper function to get current user ID from Supabase auth
@@ -248,6 +264,153 @@ export const useStore = create<AppState>()(
         }
       },
       getInvoiceById: (id) => get().invoices.find((inv) => inv.id === id),
+
+      // Quotes
+      quotes: [],
+      loadQuotes: async () => {
+        if (isSupabaseConfigured()) {
+          set({ isLoading: true });
+          const userId = get().userId || await getCurrentUserId();
+          if (!userId) {
+            set({ isLoading: false });
+            return;
+          }
+          const quotes = await quoteService.getQuotes(userId);
+          set({ quotes, isLoading: false });
+        }
+      },
+      addQuote: async (quote) => {
+        if (isSupabaseConfigured()) {
+          const userId = get().userId || await getCurrentUserId();
+          if (!userId) {
+            console.error('No authenticated user found');
+            return;
+          }
+          const newQuote = await quoteService.createQuote(userId, quote);
+          if (newQuote) {
+            set((state) => ({
+              quotes: [...state.quotes, newQuote],
+            }));
+          }
+        } else {
+          // Fallback to localStorage
+          const newQuote = {
+            ...quote,
+            id: crypto.randomUUID(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          } as Quote;
+          set((state) => ({
+            quotes: [...state.quotes, newQuote],
+          }));
+        }
+      },
+      updateQuote: async (id, quoteUpdate) => {
+        if (isSupabaseConfigured()) {
+          const success = await quoteService.updateQuote(id, quoteUpdate);
+          if (success) {
+            set((state) => ({
+              quotes: state.quotes.map((q) =>
+                q.id === id ? { ...q, ...quoteUpdate, updatedAt: new Date() } : q
+              ),
+            }));
+          }
+        } else {
+          set((state) => ({
+            quotes: state.quotes.map((q) =>
+              q.id === id ? { ...q, ...quoteUpdate, updatedAt: new Date() } : q
+            ),
+          }));
+        }
+      },
+      deleteQuote: async (id) => {
+        if (isSupabaseConfigured()) {
+          const success = await quoteService.deleteQuote(id);
+          if (success) {
+            set((state) => ({
+              quotes: state.quotes.filter((q) => q.id !== id),
+            }));
+          }
+        } else {
+          set((state) => ({
+            quotes: state.quotes.filter((q) => q.id !== id),
+          }));
+        }
+      },
+      getQuoteById: (id) => get().quotes.find((q) => q.id === id),
+
+      // Quote Item Templates
+      quoteItemTemplates: [],
+      loadQuoteItemTemplates: async () => {
+        if (isSupabaseConfigured()) {
+          set({ isLoading: true });
+          const userId = get().userId || await getCurrentUserId();
+          if (!userId) {
+            set({ isLoading: false });
+            return;
+          }
+          const templates = await quoteService.getQuoteItemTemplates(userId);
+          set({ quoteItemTemplates: templates, isLoading: false });
+        }
+      },
+      addQuoteItemTemplate: async (template) => {
+        if (isSupabaseConfigured()) {
+          const userId = get().userId || await getCurrentUserId();
+          if (!userId) {
+            console.error('No authenticated user found');
+            return;
+          }
+          const newTemplate = await quoteService.createQuoteItemTemplate(userId, template);
+          if (newTemplate) {
+            set((state) => ({
+              quoteItemTemplates: [...state.quoteItemTemplates, newTemplate],
+            }));
+          }
+        } else {
+          // Fallback to localStorage
+          const newTemplate = {
+            ...template,
+            id: crypto.randomUUID(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          set((state) => ({
+            quoteItemTemplates: [...state.quoteItemTemplates, newTemplate],
+          }));
+        }
+      },
+      updateQuoteItemTemplate: async (id, templateUpdate) => {
+        if (isSupabaseConfigured()) {
+          const success = await quoteService.updateQuoteItemTemplate(id, templateUpdate);
+          if (success) {
+            set((state) => ({
+              quoteItemTemplates: state.quoteItemTemplates.map((t) =>
+                t.id === id ? { ...t, ...templateUpdate, updatedAt: new Date() } : t
+              ),
+            }));
+          }
+        } else {
+          set((state) => ({
+            quoteItemTemplates: state.quoteItemTemplates.map((t) =>
+              t.id === id ? { ...t, ...templateUpdate, updatedAt: new Date() } : t
+            ),
+          }));
+        }
+      },
+      deleteQuoteItemTemplate: async (id) => {
+        if (isSupabaseConfigured()) {
+          const success = await quoteService.deleteQuoteItemTemplate(id);
+          if (success) {
+            set((state) => ({
+              quoteItemTemplates: state.quoteItemTemplates.filter((t) => t.id !== id),
+            }));
+          }
+        } else {
+          set((state) => ({
+            quoteItemTemplates: state.quoteItemTemplates.filter((t) => t.id !== id),
+          }));
+        }
+      },
 
       // Templates
       templates: [

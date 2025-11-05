@@ -94,3 +94,57 @@ export interface PaymentRecord {
   reference?: string;
   lunarTransactionId?: string;
 }
+
+// Quote/Proposal System Types
+export interface QuoteItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  vatRate: number; // Percentage (25, 12, 6, 0)
+  total: number;
+  category?: string; // For organizing items
+  notes?: string; // Optional notes for this line item
+}
+
+export interface QuoteItemTemplate {
+  id: string;
+  name: string;
+  description: string;
+  defaultQuantity: number;
+  defaultUnitPrice: number;
+  defaultVatRate: number;
+  category: string;
+  tags?: string[];
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Quote {
+  id: string;
+  quoteNumber: string;
+  customerId: string;
+  customer: Customer;
+  items: QuoteItem[];
+  subtotal: number;
+  vatAmount: number;
+  total: number;
+  currency: string;
+  validUntil: Date; // Quote expiration date
+  quoteDate: Date;
+  deliveryTime?: string; // e.g., "2-3 weeks"
+  paymentTerms?: string; // e.g., "50% upfront, 50% on delivery"
+  notes?: string;
+  internalNotes?: string; // Notes not visible to customer
+  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'converted';
+  createdAt: Date;
+  updatedAt: Date;
+  sentAt?: Date;
+  respondedAt?: Date;
+  convertedToInvoiceId?: string; // If converted to invoice
+  discount?: number; // Percentage discount
+  discountAmount?: number; // Fixed discount amount
+}
+
+export type QuoteStatus = Quote['status'];
