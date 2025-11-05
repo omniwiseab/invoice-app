@@ -74,25 +74,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     console.log('Initializing auth...');
 
-    // Get current session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('Session check:', session ? 'Logged in' : 'Not logged in');
-
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      // Try to fetch profile but don't block on it
-      if (session?.user) {
-        console.log('Fetching user profile (non-blocking)...');
-        fetchUserProfile(session.user.id).then(profile => {
-          setUserProfile(profile);
-          console.log('Profile loaded:', profile ? 'Yes' : 'No (using default)');
-        });
-      }
-
+    // Safety timeout - always stop loading after 3 seconds max
+    const loadingTimeout = setTimeout(() => {
+      console.warn('Auth initialization timeout - proceeding anyway');
       setLoading(false);
-      console.log('Auth ready - user can proceed');
-    });
+    }, 3000);
+
+    // Get current session with error handling
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        clearTimeout(loadingTimeout);
+        console.log('Session check:', session ? 'Logged in' : 'Not logged in');
+
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        // Try to fetch profile but don't block on it
+        if (session?.user) {
+          console.log('Fetching user profile (non-blocking)...');
+          fetchUserProfile(session.user.id).then(profile => {
+            setUserProfile(profile);
+            console.log('Profile loaded:', profile ? 'Yes' : 'No (using default)');
+          }).catch(err => {
+            console.warn('Profile fetch failed (non-critical):', err);
+          });
+        }
+
+        setLoading(false);
+        console.log('Auth ready - user can proceed');
+      })
+      .catch((err) => {
+        clearTimeout(loadingTimeout);
+        console.error('Session check failed:', err);
+        setLoading(false);
+        console.log('Auth ready despite error - user can proceed');
+      });
 
     // Listen to auth changes
     const {
@@ -108,6 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('Auth changed, fetching profile (non-blocking)...');
         fetchUserProfile(session.user.id).then(profile => {
           setUserProfile(profile);
+        }).catch(err => {
+          console.warn('Profile fetch after auth change failed:', err);
         });
       } else {
         setUserProfile(null);
@@ -116,7 +134,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(loadingTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
