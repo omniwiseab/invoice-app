@@ -1,9 +1,10 @@
 import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleGuard } from './components/RoleGuard';
+import { AuthHashHandler } from './components/AuthHashHandler';
 import { useStore } from './store/useStore';
 import { isSupabaseConfigured } from './services/supabaseService';
 
@@ -68,6 +69,7 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <BrowserRouter>
+          <AuthHashHandler />
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
               {/* Public routes */}
