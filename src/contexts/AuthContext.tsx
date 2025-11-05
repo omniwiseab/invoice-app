@@ -15,6 +15,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: AuthError | null }>;
   refreshUserProfile: () => Promise<void>;
 }
 
@@ -135,6 +136,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
+  const updatePassword = async (newPassword: string) => {
+    if (!supabase) {
+      return { error: { message: 'Supabase not configured', name: 'ConfigError', status: 500 } as AuthError };
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    return { error };
+  };
+
   const role = userProfile?.role ?? null;
   const isSuperAdmin = role === 'superadmin';
   const isAdmin = role === 'admin' || role === 'superadmin';
@@ -151,6 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     resetPassword,
+    updatePassword,
     refreshUserProfile,
   };
 
