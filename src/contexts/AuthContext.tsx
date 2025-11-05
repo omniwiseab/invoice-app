@@ -116,6 +116,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth event:', event);
 
+      // IMMEDIATELY set loading to false so UI can proceed
+      setLoading(false);
+
       setSession(session);
       setUser(session?.user ?? null);
 
@@ -130,8 +133,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setUserProfile(null);
       }
-
-      setLoading(false);
     });
 
     return () => {
