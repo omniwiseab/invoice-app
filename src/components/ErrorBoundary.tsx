@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { AlertCircle } from 'lucide-react';
+import { errorLogger } from '../services/errorLogger';
 
 interface Props {
   children: ReactNode;
@@ -34,8 +35,13 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    // You can also log the error to an error reporting service here
-    // Example: logErrorToService(error, errorInfo);
+    // Log error to error logging service
+    errorLogger.logError(error, {
+      component: 'ErrorBoundary',
+      additionalData: {
+        componentStack: errorInfo.componentStack,
+      },
+    });
   }
 
   handleReset = (): void => {

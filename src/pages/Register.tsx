@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { UserPlus, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { authRateLimiter, formatTimeRemaining } from '../utils/rateLimiter';
+import { logAuthError } from '../services/errorLogger';
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -57,18 +59,36 @@ export const Register = () => {
       return;
     }
 
+    // Check rate limiting
+    const rateLimitCheck = authRateLimiter.isAllowed(email, 'register');
+    if (!rateLimitCheck.allowed) {
+      const timeRemaining = rateLimitCheck.blockedUntil
+        ? formatTimeRemaining(rateLimitCheck.blockedUntil - Date.now())
+        : '';
+      setError(`Too many registration attempts. Please try again in ${timeRemaining}.`);
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { error } = await signUp(email, password);
 
       if (error) {
+        // Log authentication error
+        logAuthError('register', error.message || 'Registration failed', email);
+
+        // Record failed attempt
+        authRateLimiter.recordAttempt(email, 'register');
+
         if (error.message.includes('already registered')) {
           setError('Email address is already registered');
         } else {
           setError(error.message || 'An error occurred during registration');
         }
       } else {
+        // Reset rate limit on successful registration
+        authRateLimiter.reset(email, 'register');
         setSuccess(true);
         // Wait 2 seconds before navigating to login
         setTimeout(() => {
@@ -76,6 +96,8 @@ export const Register = () => {
         }, 2000);
       }
     } catch (err) {
+      // Log unexpected error
+      logAuthError('register', err instanceof Error ? err : 'Unknown error', email);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);

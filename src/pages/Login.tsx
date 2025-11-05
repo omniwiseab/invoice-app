@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
+import { authRateLimiter, formatTimeRemaining } from '../utils/rateLimiter';
+import { logAuthError } from '../services/errorLogger';
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,17 +38,44 @@ export const Login = () => {
       return;
     }
 
+    // Check rate limiting
+    const rateLimitCheck = authRateLimiter.isAllowed(email, 'login');
+    if (!rateLimitCheck.allowed) {
+      const timeRemaining = rateLimitCheck.blockedUntil
+        ? formatTimeRemaining(rateLimitCheck.blockedUntil - Date.now())
+        : '';
+      setError(`Too many login attempts. Please try again in ${timeRemaining}.`);
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { error } = await signIn(email, password);
 
       if (error) {
-        setError('Invalid email or password');
+        // Log authentication error
+        logAuthError('login', error.message || 'Login failed', email);
+
+        // Record failed attempt
+        const result = authRateLimiter.recordAttempt(email, 'login');
+
+        if (!result.allowed) {
+          const timeRemaining = result.blockedUntil
+            ? formatTimeRemaining(result.blockedUntil - Date.now())
+            : '';
+          setError(`Too many failed attempts. Account temporarily locked for ${timeRemaining}.`);
+        } else {
+          setError(`Invalid email or password. ${result.remaining} attempts remaining.`);
+        }
       } else {
+        // Reset rate limit on successful login
+        authRateLimiter.reset(email, 'login');
         navigate('/');
       }
     } catch (err) {
+      // Log unexpected error
+      logAuthError('login', err instanceof Error ? err : 'Unknown error', email);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
