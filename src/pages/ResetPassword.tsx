@@ -13,15 +13,28 @@ export const ResetPassword = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const { updatePassword, session } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user has a valid session (they clicked the reset link)
-    if (!session) {
-      setError('Invalid or expired reset link. Please request a new password reset.');
-    }
+    // Give Supabase time to process the tokens from URL hash
+    const timer = setTimeout(() => {
+      setCheckingSession(false);
+      if (!session) {
+        setError('Invalid or expired reset link. Please request a new password reset.');
+      }
+    }, 2000); // Wait 2 seconds for session to be established
+
+    return () => clearTimeout(timer);
   }, [session]);
+
+  // If we get a session while checking, stop checking immediately
+  useEffect(() => {
+    if (session && checkingSession) {
+      setCheckingSession(false);
+    }
+  }, [session, checkingSession]);
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
@@ -70,6 +83,25 @@ export const ResetPassword = () => {
     }
   };
 
+  // Show loading while checking for session
+  if (checkingSession) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <KeyRound size={40} color="var(--primary-color)" />
+            <h1>Verifying Reset Link...</h1>
+            <p>Please wait while we verify your password reset link</p>
+          </div>
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <div className="spinner"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if no valid session after checking
   if (!session) {
     return (
       <div className="auth-container">
