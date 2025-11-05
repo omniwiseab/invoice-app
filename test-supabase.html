@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Configuration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre {
+            background: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Supabase Configuration Test</h1>
+    <p>Detta script testar din Supabase-konfiguration</p>
+
+    <div id="results"></div>
+
+    <button onclick="testConfig()">Test Configuration</button>
+    <button onclick="testLogin()">Test Login</button>
+
+    <script type="module">
+        const results = document.getElementById('results');
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            results.innerHTML = '';
+        }
+
+        window.testConfig = async function() {
+            clearResults();
+
+            // Check environment variables
+            const url = import.meta.env.VITE_SUPABASE_URL;
+            const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+            addResult('<h2>📋 Step 1: Checking Environment Variables</h2>', 'info');
+
+            if (!url || url === 'your_supabase_project_url_here') {
+                addResult('❌ VITE_SUPABASE_URL är inte konfigurerad!<br>Nuvarande värde: ' + (url || 'undefined'), 'error');
+                addResult('<strong>Lösning:</strong> Uppdatera .env.local med din riktiga Supabase Project URL', 'warning');
+                return;
+            } else {
+                addResult('✅ VITE_SUPABASE_URL: ' + url, 'success');
+            }
+
+            if (!key || key === 'your_supabase_anon_key_here') {
+                addResult('❌ VITE_SUPABASE_ANON_KEY är inte konfigurerad!', 'error');
+                addResult('<strong>Lösning:</strong> Uppdatera .env.local med din riktiga Supabase anon key', 'warning');
+                return;
+            } else {
+                addResult('✅ VITE_SUPABASE_ANON_KEY: ' + key.substring(0, 30) + '... (' + key.length + ' tecken)', 'success');
+            }
+
+            // Try to connect
+            addResult('<h2>🌐 Step 2: Testing Connection</h2>', 'info');
+
+            try {
+                const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+                const supabase = createClient(url, key);
+
+                addResult('✅ Supabase client skapad', 'success');
+
+                // Test connection
+                const { data, error } = await supabase.auth.getSession();
+
+                if (error) {
+                    addResult('❌ Kunde inte ansluta: ' + error.message, 'error');
+                } else {
+                    addResult('✅ Anslutning till Supabase lyckades!', 'success');
+                    addResult('Session: ' + (data.session ? 'Inloggad' : 'Inte inloggad'), 'info');
+                }
+            } catch (err) {
+                addResult('❌ Fel vid anslutning: ' + err.message, 'error');
+            }
+        };
+
+        window.testLogin = async function() {
+            clearResults();
+
+            const email = prompt('Email:');
+            const password = prompt('Password:');
+
+            if (!email || !password) {
+                addResult('❌ Email och lösenord krävs', 'error');
+                return;
+            }
+
+            const url = import.meta.env.VITE_SUPABASE_URL;
+            const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+            if (!url || !key || url === 'your_supabase_project_url_here') {
+                addResult('❌ Supabase är inte konfigurerad. Kör "Test Configuration" först.', 'error');
+                return;
+            }
+
+            addResult('<h2>🔐 Testing Login</h2>', 'info');
+            addResult('Försöker logga in som: ' + email, 'info');
+
+            try {
+                const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+                const supabase = createClient(url, key);
+
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) {
+                    addResult('❌ Login misslyckades: ' + error.message, 'error');
+                    addResult('<pre>' + JSON.stringify(error, null, 2) + '</pre>', 'info');
+                } else {
+                    addResult('✅ Login lyckades!', 'success');
+                    addResult('User: ' + data.user.email, 'info');
+                    addResult('<pre>' + JSON.stringify(data.user, null, 2) + '</pre>', 'info');
+                }
+            } catch (err) {
+                addResult('❌ Oväntat fel: ' + err.message, 'error');
+            }
+        };
+    </script>
+</body>
+</html>

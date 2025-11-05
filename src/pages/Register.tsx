@@ -59,13 +59,6 @@ export const Register = () => {
       return;
     }
 
-    // Check if Supabase is configured
-    if (!import.meta.env.VITE_SUPABASE_URL ||
-        import.meta.env.VITE_SUPABASE_URL === 'your_supabase_project_url_here') {
-      setError('Supabase is not configured. Please set up your .env.local file with valid Supabase credentials. See SUPABASE_SETUP.md for instructions.');
-      return;
-    }
-
     // Check rate limiting
     const rateLimitCheck = authRateLimiter.isAllowed(email, 'register');
     if (!rateLimitCheck.allowed) {

@@ -95,13 +95,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
-      return { error: { message: 'Supabase not configured', name: 'ConfigError', status: 500 } as AuthError };
+      console.error('Supabase is not configured!');
+      return { error: { message: 'Supabase not configured. Please check your .env.local file and restart the dev server.', name: 'ConfigError', status: 500 } as AuthError };
     }
 
+    console.log('Calling Supabase signInWithPassword...');
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    console.log('Supabase signInWithPassword completed:', error ? 'ERROR' : 'SUCCESS');
 
     return { error };
   };
